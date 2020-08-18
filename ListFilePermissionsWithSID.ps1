@@ -42,9 +42,7 @@ Write-Host "error"
     Throw $_
 }
 
-# $csvFile = "fileShares_List.csv"
 $OutputFile = ("SourcePermissions_" + $fileShare.SiteName + "_" + $fileShare.ShareName + ".csv")
-# $fileShareList = Import-CSV $csvpath -Delimiter ","
 
 if (Test-Path $OutputFile) {
     $NewName = $OutputFile + "_old"
@@ -60,7 +58,7 @@ foreach ($fileShare in $fileShareList) {
     if ($folderPath) { 
     
     # Get permissions for the root folder.
-    $Acl = Get-Acl -Path \\DC-01\TestFolder1 #$fileShare.FileSharePath
+    $Acl = Get-Acl -Path $fileShare.FileSharePath
         foreach ($Access in $acl.Access) {
             $objUser = New-Object System.Security.Principal.NTAccount($Access.IdentityReference)
             $strSID = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
