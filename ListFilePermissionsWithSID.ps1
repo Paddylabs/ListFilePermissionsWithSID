@@ -23,7 +23,10 @@
 
 # Add Type and Load the Systems Forms
 Add-Type -AssemblyName System.Windows.Forms
-$csvpath = New-Object System.Windows.Forms.OpenFileDialog -Property @{ InitialDirectory = [Environment]::GetFolderPath('Desktop') }
+$csvpath = New-Object System.Windows.Forms.OpenFileDialog -Property @{ 
+    InitialDirectory = [Environment]::GetFolderPath('Desktop')
+    Filter = 'CSV (*.csv)| *.csv' 
+}
 
 # Show the Dialog
 $null = $csvpath.ShowDialog()
@@ -35,7 +38,7 @@ try {
 
 } catch {
     # An error occured.
-
+Write-Host "error"
     Throw $_
 }
 
