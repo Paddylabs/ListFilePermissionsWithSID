@@ -56,7 +56,7 @@ function import-ValidCSV
 }
 
 
-$fileShareList = import-ValidCSV -inputFile $csvpath.FileName  -requiredColumns "FileSharePath","SiteName","ShareName"
+$fileShareList = import-ValidCSV -inputFile $csvpath.FileName  -requiredColumns "FileSharePath" # ,"SiteName","ShareName"
 
 $TimeStamp = (Get-Date).tostring("dd-MM-yyyy-hh-mm-ss")
 $OutputFile = ("SourcePermissions_" + $TimeStamp + ".csv")
