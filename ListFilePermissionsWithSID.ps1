@@ -43,13 +43,22 @@ Write-Host "error"
 }
 
 $OutputFile = ("SourcePermissions_" + $fileShare.SiteName + "_" + $fileShare.ShareName + ".csv")
-
+# Rename results file if it already exists
 if (Test-Path $OutputFile) {
-    $NewName = $OutputFile + "_old"
-    Rename-Item -Path $OutputFile -NewName $NewName
-    
+        try {
+            $NewName = $OutputFile + "_old"
+            Rename-Item -Path $OutputFile -NewName $NewName -ErrorAction Stop
+        }
+        catch {
+            Write-Host $_.Exception.Message -ForegroundColor Yellow
+            Throw $_
+            
+        }
+     
     }
+
 $i = 1
+
 foreach ($fileShare in $fileShareList) {
     
     Write-Progress -Activity "Getting permissions for top level Unc Paths" -Status "Unc Path $i of $($fileShareList.count)" -PercentComplete (($i / $fileShareList.count) * 100)  
