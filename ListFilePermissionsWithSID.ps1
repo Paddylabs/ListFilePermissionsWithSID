@@ -2,8 +2,8 @@
   .SYNOPSIS
   Lists all the permissions for a list of folders and includes the SIDs
   .DESCRIPTION
-  Takes a CSV list of UNC paths and lists out the NTFS Permissions for them and translates the SIDs for
-  the Identity Reference too
+  Takes a CSV list of UNC paths and lists out the NTFS Permissions for them and includes
+  the SIDs for the Identity References in the ACL
   .PARAMETER
   None
   .EXAMPLE
@@ -19,6 +19,7 @@
   Change Log:
   V1.0:         Initial Development
   V1.1:         Added Open File Box
+  V1.2:         Added CSV Import Validation
 #>
 
 # Add Type and Load the Systems Forms
@@ -31,31 +32,34 @@ $csvpath = New-Object System.Windows.Forms.OpenFileDialog -Property @{
 # Show the Dialog
 $null = $csvpath.ShowDialog()
 
-# Try and Import the CSV File
-try {
-    # Always Use -LiteralPath
-    $fileShareList = Import-CSV -LiteralPath $csvpath.FileName
+function import-ValidCSV
+{
+        param
+        (
+                [parameter(Mandatory=$true)]
+                [ValidateScript({test-path $_ -type leaf})]
+                [string]$inputFile,
+                [string[]]$requiredColumns
+        )
+        $csvImport = import-csv -LiteralPath $inputFile
+        $inputTest = $csvImport | Get-Member
+        foreach ($requiredColumn in $requiredColumns)
+        {
+                if (!($inputTest | Where-Object {$_.name -eq $requiredColumn}))
+                {
+                        write-error "$inputFile is missing the $requiredColumn column"
+                        exit 10
+                }
+        }
 
-} catch {
-    # An error occured.
-Write-Host "error"
-    Throw $_
+        $csvImport
 }
 
-$OutputFile = ("SourcePermissions_" + $fileShare.SiteName + "_" + $fileShare.ShareName + ".csv")
-# Rename results file if it already exists
-if (Test-Path $OutputFile) {
-        try {
-            $NewName = $OutputFile + "_old"
-            Rename-Item -Path $OutputFile -NewName $NewName -ErrorAction Stop
-        }
-        catch {
-            Write-Host $_.Exception.Message -ForegroundColor Yellow
-            Throw $_
-            
-        }
-     
-    }
+
+$fileShareList = import-ValidCSV -inputFile $csvpath.FileName  -requiredColumns "FileSharePath","SiteName","ShareName"
+
+$TimeStamp = (Get-Date).tostring("dd-MM-yyyy-hh-mm-ss")
+$OutputFile = ("SourcePermissions_" + $TimeStamp + ".csv")
 
 $i = 1
 
@@ -106,6 +110,7 @@ foreach ($fileShare in $fileShareList) {
         $PermDetail | Export-Csv -Path $OutputFile -NoTypeInformation -Append
         
     }
+
 }
 
 }
