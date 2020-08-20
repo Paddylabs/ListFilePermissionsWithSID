@@ -20,6 +20,7 @@
   V1.0:         Initial Development
   V1.1:         Added Open File Box
   V1.2:         Added CSV Import Validation
+  V1.3:         Fixed to log to an output file for each share in the inputfile.
 #>
 
 # Add Type and Load the Systems Forms
@@ -56,10 +57,7 @@ function import-ValidCSV
 }
 
 
-$fileShareList = import-ValidCSV -inputFile $csvpath.FileName  -requiredColumns "FileSharePath" # ,"SiteName","ShareName"
-
-$TimeStamp = (Get-Date).tostring("dd-MM-yyyy-hh-mm-ss")
-$OutputFile = ("SourcePermissions_" + $TimeStamp + ".csv")
+$fileShareList = import-ValidCSV -inputFile $csvpath.FileName  -requiredColumns "FileSharePath" ,"SiteName","ShareName"
 
 $i = 1
 
@@ -73,6 +71,7 @@ foreach ($fileShare in $fileShareList) {
     # Get permissions for the root folder.
     $Acl = Get-Acl -Path $fileShare.FileSharePath
         foreach ($Access in $acl.Access) {
+            $OutputFile = ("SourcePermissions_" + $fileShare.SiteName + "_" + $fileShare.ShareName + ".csv")
             $objUser = New-Object System.Security.Principal.NTAccount($Access.IdentityReference)
             $strSID = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
                 $PermDetailHash = [Ordered] @{
@@ -126,7 +125,7 @@ else {
 }
 
 $PermDetail = New-Object -TypeName PSObject -Property $PermDetailHash
-$PermDetail | Export-Csv -Path $OutputFile -NoTypeInformation -Append
+$PermDetail | Export-Csv -Path 'SharesNotFound.csv' -NoTypeInformation -Append
 
 }
 
